@@ -1,21 +1,32 @@
 #include "pipe_networking.h"
-//UPSTREAM = to the server / from the client
-//DOWNSTREAM = to the client / from the server
+
+int err() {
+    printf("error %d: %s\n", errno, strerror(errno));
+    exit(1);
+}
+
+// UPSTREAM = to the server / from the client
+// DOWNSTREAM = to the client / from the server
 /*=========================
   server_setup
 
-  creates the WKP and opens it, waiting for a  connection.
+  creates the WKP and opens it, waiting for a connection.
   removes the WKP once a connection has been made
 
   returns the file descriptor for the upstream pipe.
   =========================*/
-int err() {
-    printf("")
-}
 int server_setup() {
     mkfifo(WKP, 0666);
 
     int from_client = open(WKP, O_RDONLY);
+    if (from_client == -1) {
+        err();
+    }
+    // server will BLOCK (hanging program) until client connects, then remove the WKP
+    int remove_WKP = remove(WKP);
+    if (remove_WKP == -1) {
+        err();
+    }
     
     char buffer[256];
     return from_client;
@@ -31,8 +42,15 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
-  int from_client = open
-  return from_client;
+    int from_client = server_setup();
+
+    mkfifo(getpid(), 0666);
+
+    // convert getpid() to string
+    *to_client = open(getpid(), O_RDONLY);
+    
+
+    return from_client;
 }
 
 
