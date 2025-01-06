@@ -1,10 +1,5 @@
 #include "pipe_networking.h"
 
-// int err() {
-//     printf("error %d: %s\n", errno, strerror(errno));
-//     exit(1);
-// }
-
 int main() {
     int to_client;
     int from_client;
@@ -16,7 +11,7 @@ int main() {
     if (write_to_client_status == -1) {
         err();
     }
-    printf("Server successfully wrote to client.\n");
+    printf("Server successfully wrote to client: %s\n", to_client_message);
 
     char from_client_message[BUFFER_SIZE];
     int read_from_client_status = read(from_client, from_client_message, BUFFER_SIZE);
