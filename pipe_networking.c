@@ -16,19 +16,24 @@ int err() {
   returns the file descriptor for the upstream pipe.
   =========================*/
 int server_setup() {
+    // 1. Server making the WKP pipe
     mkfifo(WKP, 0666);                          // 1. Server making the WKP.
 
+    // 2. Server opening the WKP [BLOCKS SERVER]
     int from_client = open(WKP, O_RDONLY);      // 2. Server opening the WKP. [BLOCKS]
     if (from_client == -1) {
         err();
     }
 
+
+
+    // 4. Server removing the WKP
     int remove_WKP = remove(WKP);
     if (remove_WKP == -1) {
         err();
     }
-    
-    char buffer[256];
+
+    // returning WKP file descriptor
     return from_client;
 }
 
@@ -42,17 +47,44 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
+    // retrieving WKP file descriptor
     int from_client = server_setup();
+    char from_client_message[BUFFER_SIZE];
 
-    // mkfifo(getpid(), 0666);
+    // 5. Server reading PP (SYN) from WKP
+    printf("Server | reading from client...\n");
+    int read_from_client_status = read(from_client, from_client_message, BUFFER_SIZE);   
+    if (read_from_client_status == -1) {
+        err();
+    }
+    // int private_pipe = strtol(from_client_message, NULL, 10); // convert buffer to int
+    printf("Server | received SYN: %s\n", from_client_message);
 
-    // // convert getpid() to string
-    // *to_client = open(getpid(), O_RDONLY);      // 3. Client making WKP [UNBLOCK]
-    
+    // 6. Server opening PP [UNBLOCKS CLIENT]
+    *to_client = open(from_client_message, O_WRONLY); 
+    if (*to_client == -1) {
+        err();
+    }
+
+    // 7. Server sending PP (SYN_ACK) to PP (to step 8)
+    srand(time(NULL));
+    int to_client_acknowledge = rand();
+    int write_to_client_status = write(*to_client, &to_client_acknowledge, sizeof(int));                 
+    if (write_to_client_status == -1) {
+        err();
+    }
+    printf("Server | sent SYN_ACK: %d\n", to_client_acknowledge);
+
+    // 10. Server reading ACK from WKP (from step 9)
+    int from_client_acknowledge;
+    int from_client_status = read(from_client, &from_client_acknowledge, sizeof(int));               
+    if (from_client_status == -1) {
+        err();
+    }
+    printf("Server | received ACK: %d. Handshake complete.\n", from_client_acknowledge);
 
     // return from_client;
 }
-
 
 /*=========================
   client_handshake
@@ -64,26 +96,50 @@ int server_handshake(int *to_client) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int client_handshake(int *to_server) {
-    char buffer[BUFFER_SIZE];
-    sprintf(buffer, "%s", getpid());
-    mkfifo(buffer, 0666);                   // 3. Client making PP.
+    // 3. Client making PP.
+    char private_pipe[BUFFER_SIZE];
+    sprintf(private_pipe, "%d", getpid());
+    mkfifo(private_pipe, 0666);
 
-    int wkp = open(WKP, O_WRONLY);          // 3. Client opening WKP. [UNBLOCKS]
-    if (wkp == -1) {
+    // 3. Client opening WKP. [UNBLOCKS]
+    *to_server = open(WKP, O_WRONLY);
+    if (*to_server == -1) {
         err();
     }
 
-    write(wkp, getpid(), sizeof(int));      // 3. Client writing
+    // 3. Client writing PP (SYN) TO WKP.
+    int pid = getpid();
+    printf("Sending SYN: %d\n", pid);
+    write(*to_server, &pid, sizeof(int));
 
-    int pp = open(buffer, O_RDONLY);        // 3. Client opening PP. [BLOCKS]
-    if (pp == -1) {
+    // 3. Client opening PP. [BLOCKS]
+    int from_server = open(private_pipe, O_RDONLY);
+    if (from_server == -1) {
         err();
     }
 
-    int from_server;
+    // BLOCK
+
+    // 8. Client reading SYN_ACK from PP (from step 7)
+    int from_server_acknowledge;
+    int read_from_server_status = read(from_server, &from_server_acknowledge, sizeof(int));
+    if (read_from_server_status == -1) {
+        err();
+    }
+    printf("Received SYN_ACK: %d\n", from_server_acknowledge);
+
+    // 8. Client deleting PP
+    int remove_private_pipe = remove(private_pipe);
+    if (remove_private_pipe == -1) {
+        err();
+    }
+    
+    // 9. Client sending ACK to WKP (to step 10)
+    int ack = from_server_acknowledge + 1;
+    write(*to_server, &ack, sizeof(int));   
+
     return from_server;
 }
-
 
 /*=========================
   server_connect
@@ -94,6 +150,6 @@ int client_handshake(int *to_server) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int server_connect(int from_client) {
-    int to_client  = 0;
-    return to_client;
+    int to_client = 0;
+    return to_client; 
 }
