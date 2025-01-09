@@ -51,6 +51,66 @@ int server_handshake(int *to_client) {
     int from_client = server_setup();
     // char from_client_message[BUFFER_SIZE];
 
+    // // 5. Server reading PP (SYN) from WKP
+    // // printf("Server | reading from client...\n");
+    // int from_client_message;
+    // int read_from_client_status = read(from_client, &from_client_message, sizeof(int));   
+    // if (read_from_client_status == -1) {
+    //     err();
+    // }
+    // printf("Server | received SYN: %d\n", from_client_message);
+
+    pid_t subserver;
+    if (subserver = fork()) {
+        server_handshake_half(to_client, from_client);
+    }
+
+    // // 6. Server opening PP [UNBLOCKS CLIENT]
+    // char private_pipe[BUFFER_SIZE];
+    // sprintf(private_pipe, "%d", from_client_message);
+    // *to_client = open(private_pipe, O_WRONLY); 
+    // if (*to_client == -1) {
+    //     err();
+    // }
+
+    // // 7. Server sending PP (SYN_ACK) to PP (to step 8)
+    // srand(time(NULL));
+    // int to_client_acknowledge = rand();
+    // int write_to_client_status = write(*to_client, &to_client_acknowledge, sizeof(int));                 
+    // if (write_to_client_status == -1) {
+    //         // 6. Server opening PP [UNBLOCKS CLIENT]
+    // char private_pipe[BUFFER_SIZE];
+    // sprintf(private_pipe, "%d", from_client_message);
+    // *to_client = open(private_pipe, O_WRONLY); 
+    // if (*to_client == -1) {
+    //     err();
+    // }
+
+    // // 7. Server sending PP (SYN_ACK) to PP (to step 8)
+    // srand(time(NULL));
+    // int to_client_acknowledge = rand();
+    // int write_to_client_status = write(*to_client, &to_client_acknowledge, sizeof(int));                 
+    // if (write_to_client_status == -1) {
+    //     err();
+    // }
+    // printf("Server | sent SYN_ACK: %d\n", to_client_acknowledge);
+
+    // // 10. Server reading ACK from WKP (from step 9)
+    // int from_client_acknowledge;
+    // int from_client_status = read(from_client, &from_client_acknowledge, sizeof(int));               
+    // if (from_client_status == -1) {
+    //     err();
+    // }
+    // printf("Server | received ACK: %d. Handshake complete.\n", from_client_acknowledge);
+
+    // return from_client;r();
+    // }
+    // printf("Server | received ACK: %d. Handshake complete.\n", from_client_acknowledge);
+
+    // return from_client;
+}
+
+int server_handshake_half(int *to_client, int from_client) {
     // 5. Server reading PP (SYN) from WKP
     // printf("Server | reading from client...\n");
     int from_client_message;
@@ -58,9 +118,7 @@ int server_handshake(int *to_client) {
     if (read_from_client_status == -1) {
         err();
     }
-    // int client_syn = strtol(from_client_message, NULL, 10); // convert buffer to int in base 10
-    printf("Server | received SYN: %d\n", from_client_message);
-
+    
     // 6. Server opening PP [UNBLOCKS CLIENT]
     char private_pipe[BUFFER_SIZE];
     sprintf(private_pipe, "%d", from_client_message);
@@ -87,6 +145,7 @@ int server_handshake(int *to_client) {
     printf("Server | received ACK: %d. Handshake complete.\n", from_client_acknowledge);
 
     return from_client;
+    return 0;
 }
 
 /*=========================

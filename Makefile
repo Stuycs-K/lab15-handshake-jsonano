@@ -12,7 +12,7 @@ server: compile-server
 	@./server.out
 
 # Compiling files
-compile: compile-client compile-basic compile-persistent # ADD compile-server WHEN FORKING_SERVER IS DONE
+compile: compile-client compile-basic compile-persistent compile-server # ADD compile-server WHEN FORKING_SERVER IS DONE
 
 compile-client: basic_client.o pipe_networking.o
 	@gcc -o client.out basic_client.o pipe_networking.o
