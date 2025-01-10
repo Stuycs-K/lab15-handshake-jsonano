@@ -3,7 +3,7 @@
 
 static void sighandler(int signo) {
     if (signo == SIGINT) {
-        printf("Client ends. Server closed.\n");
+        printf("Detected SIGINT (CTRL+C). Server closed.\n");
         int remove_server_status = remove(WKP);
         if (remove_server_status == -1) {
             err();
@@ -19,6 +19,8 @@ int main() {
     signal(SIGINT, sighandler);     // catch CTRL-C to exit while loop
     signal(SIGPIPE, sighandler);    // catch broken pipe
 
+    srand(time(NULL));
+
     while (1) {
         int to_client;
         int from_client;
@@ -26,12 +28,12 @@ int main() {
         from_client = server_handshake(&to_client);
 
         while (1) {
-            char to_client_message[BUFFER_SIZE] = "Hello, client!";
-            int write_to_client_status = write(to_client, to_client_message, strlen(to_client_message) + 1);
+            int to_client_message = rand() % 100;
+            int write_to_client_status = write(to_client, &to_client_message, sizeof(int));
             if (write_to_client_status == -1) {
                 err();
             }
-            printf("Server successfully wrote to client: %s\n", to_client_message);
+            printf("Server successfully wrote to client: %d\n", to_client_message);
 
             char from_client_message[BUFFER_SIZE];
             int read_from_client_status = read(from_client, from_client_message, BUFFER_SIZE);
